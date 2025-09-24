@@ -160,6 +160,7 @@ async def get_items_by_category(category_id: int):
 
 # BAD API DESIGN EXAMPLES - These will trigger Spectral errors/warnings
 
+
 @app.get("/api/v1/get-all-items")  # Violates: HTTP verbs in path, not kebab-case
 async def get_all_items_bad():
     """This endpoint violates multiple API design rules."""
