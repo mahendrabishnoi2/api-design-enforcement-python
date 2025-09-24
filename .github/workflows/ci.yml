@@ -80,8 +80,6 @@ jobs:
       with:
         file_glob: 'openapi.json'
         spectral_ruleset: '.spectral.yml'
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        env: github
 
   build:
     runs-on: ubuntu-latest
