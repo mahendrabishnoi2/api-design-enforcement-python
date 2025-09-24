@@ -43,6 +43,25 @@ api-lint: ## Lint API design with Spectral
 	@pkill -f "uvicorn main:app" || true
 	@rm -f openapi.json
 
+api-lint-github: ## Lint API design with Spectral (GitHub Actions format)
+	@echo "Installing Spectral if not present..."
+	@npm list -g @stoplight/spectral-cli || npm install -g @stoplight/spectral-cli
+	@echo "Killing any existing uvicorn processes..."
+	@pkill -f "uvicorn main:app" || true
+	@sleep 1
+	@echo "Starting FastAPI server on port 8001..."
+	@uv run uvicorn main:app --host 0.0.0.0 --port 8001 &
+	@sleep 3
+	@echo "Generating OpenAPI spec..."
+	@curl -s -o openapi.json http://localhost:8001/openapi.json || (echo "Failed to get OpenAPI spec" && pkill -f "uvicorn main:app" && exit 1)
+	@echo "Running Spectral API linting with GitHub Actions format..."
+	@npx @stoplight/spectral-cli lint openapi.json --format github-actions --verbose || true
+	@echo ""
+	@echo "Summary:"
+	@npx @stoplight/spectral-cli lint openapi.json --format stylish || true
+	@pkill -f "uvicorn main:app" || true
+	@rm -f openapi.json
+
 clean: ## Clean up generated files
 	rm -rf __pycache__/
 	rm -rf .pytest_cache/

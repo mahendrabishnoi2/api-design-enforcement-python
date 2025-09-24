@@ -89,8 +89,23 @@ jobs:
     - name: Lint API with Spectral
       run: |
         echo "::group::Running Spectral API linting"
-        spectral lint openapi.json --format stylish --verbose
+
+        # Run Spectral with GitHub Actions format for PR annotations
+        echo "Running Spectral with GitHub Actions annotations..."
+        spectral lint openapi.json --format github-actions --verbose || SPECTRAL_EXIT_CODE=$?
+
+        # Also show summary in logs
+        echo ""
+        echo "Spectral Summary:"
+        spectral lint openapi.json --format stylish --verbose || true
+
         echo "::endgroup::"
+
+        # Exit with Spectral's exit code if there were errors
+        if [ -n "$SPECTRAL_EXIT_CODE" ] && [ "$SPECTRAL_EXIT_CODE" -ne "0" ]; then
+          echo "::error::Spectral found API design issues that need to be addressed"
+          exit $SPECTRAL_EXIT_CODE
+        fi
       continue-on-error: false
 
   build:

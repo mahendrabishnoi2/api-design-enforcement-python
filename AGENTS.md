@@ -29,7 +29,8 @@ make test         # Run pytest test suite
 
 ### API Design Enforcement
 ```bash
-make api-lint     # Lint API design with Spectral (requires Node.js)
+make api-lint           # Lint API design with Spectral (requires Node.js)
+make api-lint-github    # Lint with GitHub Actions format for PR annotations
 ```
 
 ### Build and CI
@@ -83,6 +84,13 @@ The application uses OpenAPI 3.1 specification and includes comprehensive API do
 - PR-specific features:
   - Runs on PR events: opened, synchronize, reopened, ready_for_review
   - Skips draft PRs automatically
-  - Enhanced error reporting with GitHub annotations
+  - Spectral outputs GitHub annotations that appear directly on PR files
+  - Enhanced error reporting with GitHub annotations for all linting tools
   - Tests new categories API endpoints
   - Proper permissions for PR comments and checks
+
+### GitHub Annotations
+Spectral API linting results appear as inline annotations on PR files:
+- Warnings for API design issues (missing tags, descriptions, etc.)
+- Errors for serious violations (HTTP verb usage in paths, etc.)
+- Annotations point to the OpenAPI spec file but reference the relevant API endpoints
