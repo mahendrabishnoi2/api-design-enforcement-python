@@ -29,7 +29,8 @@ make test         # Run pytest test suite
 
 ### API Design Enforcement
 ```bash
-make api-lint     # Lint API design with Spectral (requires Node.js)
+make api-lint           # Lint API design with Spectral (requires Node.js)
+make api-lint-github    # Lint with GitHub Actions format for PR annotations
 ```
 
 ### Build and CI
@@ -80,3 +81,19 @@ The application uses OpenAPI 3.1 specification and includes comprehensive API do
 - Pytest test execution
 - Build validation and endpoint testing
 - Runs on push to main/develop branches and pull requests
+- PR-specific features:
+  - Runs on PR events: opened, synchronize, reopened, ready_for_review
+  - Skips draft PRs automatically
+  - Spectral outputs GitHub annotations that appear directly on PR files
+  - Enhanced error reporting with GitHub annotations for all linting tools
+  - Tests new categories API endpoints
+  - Proper permissions for PR comments and checks
+
+### GitHub Annotations
+Uses the official `stoplightio/spectral-action` for PR integration:
+- Creates GitHub check runs with detailed results
+- Inline annotations on PR files for each violation
+- Comments on PRs with violation summaries
+- Warnings for API design issues (missing tags, descriptions, etc.)
+- Errors for serious violations (HTTP verb usage in paths, etc.)
+- Direct integration with GitHub's review system
