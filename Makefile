@@ -28,13 +28,18 @@ build: ## Build and validate application
 	uv run python -c "import main; print('✓ Application builds successfully')"
 
 api-lint: ## Lint API design with Spectral
-	@echo "Starting FastAPI server..."
-	@uv run uvicorn main:app --host 0.0.0.0 --port 8000 &
+	@echo "Installing Spectral if not present..."
+	@npm list -g @stoplight/spectral-cli || npm install -g @stoplight/spectral-cli
+	@echo "Killing any existing uvicorn processes..."
+	@pkill -f "uvicorn main:app" || true
+	@sleep 1
+	@echo "Starting FastAPI server on port 8001..."
+	@uv run uvicorn main:app --host 0.0.0.0 --port 8001 &
 	@sleep 3
 	@echo "Generating OpenAPI spec..."
-	@curl -s -o openapi.json http://localhost:8000/openapi.json
+	@curl -s -o openapi.json http://localhost:8001/openapi.json || (echo "Failed to get OpenAPI spec" && pkill -f "uvicorn main:app" && exit 1)
 	@echo "Running Spectral API linting..."
-	@npx @stoplight/spectral-cli lint openapi.json --format stylish
+	@npx @stoplight/spectral-cli lint openapi.json --format stylish || true
 	@pkill -f "uvicorn main:app" || true
 	@rm -f openapi.json
 

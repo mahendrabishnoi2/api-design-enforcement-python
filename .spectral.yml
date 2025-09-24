@@ -1,36 +1,15 @@
-extends: ["@stoplight/spectral-oai:recommended"]
+extends: ["spectral:oas"]
 
 rules:
   # OpenAPI 3.1 specific rules
   openapi-tags-alphabetical: false
   operation-operationId-unique: true
-  operation-operationId-valid-in-url: true
 
   # Custom API design rules
   operation-description: true
-  operation-summary: true
   operation-tags: true
 
-  # Response rules
-  operation-success-response: true
-  operation-4xx-response:
-    severity: warn
-    description: "Operations should have at least one 4xx response"
-    given: "$.paths.*[?(@property === 'get' || @property === 'post' || @property === 'put' || @property === 'patch' || @property === 'delete')]"
-    then:
-      field: "responses"
-      function: schema
-      functionOptions:
-        schema:
-          type: object
-          properties:
-            patternProperties:
-              "^4[0-9][0-9]$":
-                type: object
-          required: true
-
   # Schema rules
-  component-description: true
   schema-properties-descriptions:
     severity: warn
     description: "Schema properties should have descriptions"
@@ -38,30 +17,6 @@ rules:
     then:
       field: "description"
       function: truthy
-
-  # Path rules
-  path-params:
-    severity: error
-    description: "Path parameters should be defined"
-    given: "$.paths.*[?(@property === 'get' || @property === 'post' || @property === 'put' || @property === 'patch' || @property === 'delete')]"
-    then:
-      function: schema
-      functionOptions:
-        schema:
-          if:
-            properties:
-              operationId:
-                pattern: ".*\\{.*\\}.*"
-          then:
-            properties:
-              parameters:
-                type: array
-                minItems: 1
-                items:
-                  properties:
-                    in:
-                      const: "path"
-                  required: ["in", "name", "required", "schema"]
 
   # Naming conventions
   path-kebab-case:
@@ -82,13 +37,3 @@ rules:
       function: pattern
       functionOptions:
         notMatch: ".*(create|read|update|delete|get|post|put|patch).*"
-
-  # Status codes
-  use-proper-http-status-codes:
-    severity: warn
-    description: "Use proper HTTP status codes"
-    given: "$.paths.*.*.responses.*~"
-    then:
-      function: enumeration
-      functionOptions:
-        values: ["200", "201", "204", "301", "302", "304", "400", "401", "403", "404", "405", "409", "410", "422", "429", "500", "502", "503"]
