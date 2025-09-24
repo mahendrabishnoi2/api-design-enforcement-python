@@ -75,38 +75,13 @@ jobs:
         echo "OpenAPI spec generated successfully"
         echo "::endgroup::"
 
-    - name: Setup Node.js for Spectral
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-
-    - name: Install Spectral
-      run: |
-        echo "::group::Installing Spectral CLI"
-        npm install -g @stoplight/spectral-cli
-        echo "::endgroup::"
-
     - name: Lint API with Spectral
-      run: |
-        echo "::group::Running Spectral API linting"
-
-        # Run Spectral with GitHub Actions format for PR annotations
-        echo "Running Spectral with GitHub Actions annotations..."
-        spectral lint openapi.json --format github-actions --verbose || SPECTRAL_EXIT_CODE=$?
-
-        # Also show summary in logs
-        echo ""
-        echo "Spectral Summary:"
-        spectral lint openapi.json --format stylish --verbose || true
-
-        echo "::endgroup::"
-
-        # Exit with Spectral's exit code if there were errors
-        if [ -n "$SPECTRAL_EXIT_CODE" ] && [ "$SPECTRAL_EXIT_CODE" -ne "0" ]; then
-          echo "::error::Spectral found API design issues that need to be addressed"
-          exit $SPECTRAL_EXIT_CODE
-        fi
-      continue-on-error: false
+      uses: stoplightio/spectral-action@v0.8.11
+      with:
+        file_glob: 'openapi.json'
+        spectral_ruleset: '.spectral.yml'
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        env: github
 
   build:
     runs-on: ubuntu-latest

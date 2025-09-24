@@ -90,7 +90,10 @@ The application uses OpenAPI 3.1 specification and includes comprehensive API do
   - Proper permissions for PR comments and checks
 
 ### GitHub Annotations
-Spectral API linting results appear as inline annotations on PR files:
+Uses the official `stoplightio/spectral-action` for PR integration:
+- Creates GitHub check runs with detailed results
+- Inline annotations on PR files for each violation
+- Comments on PRs with violation summaries
 - Warnings for API design issues (missing tags, descriptions, etc.)
 - Errors for serious violations (HTTP verb usage in paths, etc.)
-- Annotations point to the OpenAPI spec file but reference the relevant API endpoints
+- Direct integration with GitHub's review system
