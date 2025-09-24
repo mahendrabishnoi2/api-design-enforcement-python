@@ -16,6 +16,7 @@ class Item(BaseModel):
     description: str | None = None
     price: float
     tax: float | None = None
+    category_id: int | None = None
 
 
 class ItemCreate(BaseModel):
@@ -23,9 +24,22 @@ class ItemCreate(BaseModel):
     description: str | None = None
     price: float
     tax: float | None = None
+    category_id: int | None = None
+
+
+class Category(BaseModel):
+    id: int | None = None
+    name: str
+    description: str | None = None
+
+
+class CategoryCreate(BaseModel):
+    name: str
+    description: str | None = None
 
 
 items_db = []
+categories_db = []
 
 
 @app.get("/")
@@ -84,6 +98,64 @@ async def delete_item(item_id: int):
             items_db.pop(i)
             return {"message": "Item deleted successfully"}
     raise HTTPException(status_code=404, detail="Item not found")
+
+
+@app.get("/categories", response_model=list[Category])
+async def get_categories():
+    """Get all categories."""
+    return categories_db
+
+
+@app.get("/categories/{category_id}", response_model=Category)
+async def get_category(category_id: int):
+    """Get a specific category by ID."""
+    for category in categories_db:
+        if category.get("id") == category_id:
+            return category
+    raise HTTPException(status_code=404, detail="Category not found")
+
+
+@app.post("/categories", response_model=Category, status_code=201)
+async def create_category(category: CategoryCreate):
+    """Create a new category."""
+    new_category = category.model_dump()
+    new_category["id"] = len(categories_db) + 1
+    categories_db.append(new_category)
+    return new_category
+
+
+@app.put("/categories/{category_id}", response_model=Category)
+async def update_category(category_id: int, category: CategoryCreate):
+    """Update an existing category."""
+    for i, existing_category in enumerate(categories_db):
+        if existing_category.get("id") == category_id:
+            updated_category = category.model_dump()
+            updated_category["id"] = category_id
+            categories_db[i] = updated_category
+            return updated_category
+    raise HTTPException(status_code=404, detail="Category not found")
+
+
+@app.delete("/categories/{category_id}")
+async def delete_category(category_id: int):
+    """Delete a category."""
+    for i, category in enumerate(categories_db):
+        if category.get("id") == category_id:
+            categories_db.pop(i)
+            return {"message": "Category deleted successfully"}
+    raise HTTPException(status_code=404, detail="Category not found")
+
+
+@app.get("/categories/{category_id}/items", response_model=list[Item])
+async def get_items_by_category(category_id: int):
+    """Get all items in a specific category."""
+    # First check if category exists
+    category_exists = any(cat.get("id") == category_id for cat in categories_db)
+    if not category_exists:
+        raise HTTPException(status_code=404, detail="Category not found")
+
+    # Return items that belong to this category
+    return [item for item in items_db if item.get("category_id") == category_id]
 
 
 if __name__ == "__main__":

@@ -104,3 +104,88 @@ def test_openapi_spec():
     data = response.json()
     assert data["openapi"] == "3.1.0"
     assert data["info"]["title"] == "API Design Enforcement"
+
+
+def test_get_categories_empty():
+    response = client.get("/categories")
+    assert response.status_code == 200
+    assert response.json() == []
+
+
+def test_create_category():
+    category_data = {"name": "Electronics", "description": "Electronic items"}
+    response = client.post("/categories", json=category_data)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["name"] == category_data["name"]
+    assert data["description"] == category_data["description"]
+    assert "id" in data
+
+
+def test_get_category():
+    # Create category first
+    category_data = {"name": "Books", "description": "Book items"}
+    create_response = client.post("/categories", json=category_data)
+    category_id = create_response.json()["id"]
+
+    # Get the category
+    response = client.get(f"/categories/{category_id}")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == category_data["name"]
+    assert data["id"] == category_id
+
+
+def test_update_category():
+    # Create category
+    category_data = {"name": "Original Category"}
+    create_response = client.post("/categories", json=category_data)
+    category_id = create_response.json()["id"]
+
+    # Update category
+    updated_data = {"name": "Updated Category", "description": "Updated description"}
+    response = client.put(f"/categories/{category_id}", json=updated_data)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == updated_data["name"]
+    assert data["description"] == updated_data["description"]
+
+
+def test_delete_category():
+    # Create category
+    category_data = {"name": "Category to Delete"}
+    create_response = client.post("/categories", json=category_data)
+    category_id = create_response.json()["id"]
+
+    # Delete category
+    response = client.delete(f"/categories/{category_id}")
+    assert response.status_code == 200
+    assert response.json() == {"message": "Category deleted successfully"}
+
+    # Verify deletion
+    get_response = client.get(f"/categories/{category_id}")
+    assert get_response.status_code == 404
+
+
+def test_get_items_by_category():
+    # Create category
+    category_data = {"name": "Test Category"}
+    cat_response = client.post("/categories", json=category_data)
+    category_id = cat_response.json()["id"]
+
+    # Create item in category
+    item_data = {"name": "Test Item", "price": 10.99, "category_id": category_id}
+    client.post("/items", json=item_data)
+
+    # Get items by category
+    response = client.get(f"/categories/{category_id}/items")
+    assert response.status_code == 200
+    items = response.json()
+    assert len(items) >= 1
+    assert items[0]["category_id"] == category_id
+
+
+def test_get_items_by_nonexistent_category():
+    response = client.get("/categories/999/items")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Category not found"}
