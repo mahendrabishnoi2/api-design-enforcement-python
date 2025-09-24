@@ -80,3 +80,9 @@ The application uses OpenAPI 3.1 specification and includes comprehensive API do
 - Pytest test execution
 - Build validation and endpoint testing
 - Runs on push to main/develop branches and pull requests
+- PR-specific features:
+  - Runs on PR events: opened, synchronize, reopened, ready_for_review
+  - Skips draft PRs automatically
+  - Enhanced error reporting with GitHub annotations
+  - Tests new categories API endpoints
+  - Proper permissions for PR comments and checks

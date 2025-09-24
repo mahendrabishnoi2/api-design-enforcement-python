@@ -4,7 +4,13 @@ on:
   push:
     branches: [ main, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, develop ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
 
 jobs:
   lint-and-test:
@@ -30,13 +36,19 @@ jobs:
 
     - name: Lint with ruff
       run: |
-        uv run ruff check .
+        echo "::group::Running ruff linting"
+        uv run ruff check . --output-format=github
+        echo "::endgroup::"
+        echo "::group::Checking code formatting"
         uv run ruff format --check .
+        echo "::endgroup::"
 
     - name: Type check with mypy (if available)
       run: |
         if uv pip list | grep -q mypy; then
+          echo "::group::Running mypy type checking"
           uv run mypy .
+          echo "::endgroup::"
         else
           echo "mypy not installed, skipping type check"
         fi
@@ -44,16 +56,24 @@ jobs:
 
     - name: Test with pytest
       run: |
-        uv run pytest -v
+        echo "::group::Running pytest tests"
+        uv run pytest -v --tb=short
+        echo "::endgroup::"
 
     - name: Start FastAPI server for API linting
       run: |
+        echo "::group::Starting FastAPI server"
         uv run uvicorn main:app --host 0.0.0.0 --port 8000 &
         sleep 5
+        curl --retry 5 --retry-delay 1 --retry-connrefused http://localhost:8000/health
+        echo "::endgroup::"
 
     - name: Generate OpenAPI spec
       run: |
+        echo "::group::Generating OpenAPI specification"
         curl -o openapi.json http://localhost:8000/openapi.json
+        echo "OpenAPI spec generated successfully"
+        echo "::endgroup::"
 
     - name: Setup Node.js for Spectral
       uses: actions/setup-node@v4
@@ -61,15 +81,22 @@ jobs:
         node-version: '18'
 
     - name: Install Spectral
-      run: npm install -g @stoplight/spectral-cli
+      run: |
+        echo "::group::Installing Spectral CLI"
+        npm install -g @stoplight/spectral-cli
+        echo "::endgroup::"
 
     - name: Lint API with Spectral
       run: |
+        echo "::group::Running Spectral API linting"
         spectral lint openapi.json --format stylish --verbose
+        echo "::endgroup::"
+      continue-on-error: false
 
   build:
     runs-on: ubuntu-latest
     needs: lint-and-test
+    if: github.event.pull_request.draft == false
 
     steps:
     - uses: actions/checkout@v4
@@ -84,25 +111,41 @@ jobs:
 
     - name: Install dependencies
       run: |
+        echo "::group::Installing dependencies"
         uv sync
+        echo "::endgroup::"
 
     - name: Build application
       run: |
-        uv run python -c "import main; print('Application builds successfully')"
+        echo "::group::Building application"
+        uv run python -c "import main; print('✓ Application builds successfully')"
+        echo "::endgroup::"
 
     - name: Test API endpoints
       run: |
+        echo "::group::Starting API server for endpoint testing"
         uv run uvicorn main:app --host 0.0.0.0 --port 8000 &
         sleep 5
+        curl --retry 5 --retry-delay 1 --retry-connrefused http://localhost:8000/health
+        echo "::endgroup::"
 
+        echo "::group::Testing API endpoints"
         # Test health endpoint
+        echo "Testing health endpoint..."
         curl -f http://localhost:8000/health
 
         # Test root endpoint
+        echo "Testing root endpoint..."
         curl -f http://localhost:8000/
 
+        # Test new categories endpoint
+        echo "Testing categories endpoint..."
+        curl -f http://localhost:8000/categories
+
         # Test OpenAPI docs are accessible
+        echo "Testing documentation endpoints..."
         curl -f http://localhost:8000/docs > /dev/null
         curl -f http://localhost:8000/redoc > /dev/null
 
-        echo "All API endpoints are accessible"
+        echo "✓ All API endpoints are accessible"
+        echo "::endgroup::"
