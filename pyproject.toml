@@ -1,7 +1,7 @@
 [project]
 name = "api-design-enforcement"
 version = "0.1.0"
-description = "Add your description here"
+description = "FastAPI application with API design enforcement using Spectral"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -9,3 +9,31 @@ dependencies = [
     "uvicorn[standard]>=0.24.0",
     "pydantic>=2.5.0"
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "httpx>=0.25.0",
+    "black>=23.0.0",
+    "ruff>=0.1.0"
+]
+
+[project.scripts]
+serve = "uvicorn main:app --reload"
+
+[tool.black]
+line-length = 88
+target-version = ['py313']
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "S", "B", "A", "C4", "T20"]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"main.py" = ["S104"]  # Allow binding to all interfaces for development
+"test_main.py" = ["S101"]  # Allow assert statements in tests

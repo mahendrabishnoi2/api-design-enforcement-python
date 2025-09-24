@@ -4,20 +4,43 @@ This is a FastAPI application for API design enforcement. The project is built u
 
 ## Development Commands
 
+### Setup
+```bash
+make dev          # Install all dependencies including dev tools
+make install      # Install production dependencies only
+```
+
 ### Running the Application
 ```bash
-python main.py
+make serve        # Start development server with auto-reload
+python main.py    # Alternative: start server directly
 ```
 The API will be available at `http://localhost:8000` with:
 - Swagger UI documentation at `/docs`
 - ReDoc documentation at `/redoc`
 - OpenAPI 3.1 spec at `/openapi.json`
 
-### Package Management
-This project uses `uv` for dependency management (evidenced by `uv.lock` file). Install dependencies with:
+### Code Quality
 ```bash
-uv sync
+make lint         # Run ruff and black linting
+make format       # Auto-format code with ruff and black
+make test         # Run pytest test suite
 ```
+
+### API Design Enforcement
+```bash
+make api-lint     # Lint API design with Spectral (requires Node.js)
+```
+
+### Build and CI
+```bash
+make build        # Validate application builds
+make ci           # Run complete CI pipeline locally
+make clean        # Clean up generated files
+```
+
+### Package Management
+This project uses `uv` for dependency management. The Makefile commands handle this automatically.
 
 ## Code Architecture
 
@@ -42,3 +65,18 @@ The application follows RESTful conventions with:
 - `ItemCreate`: Input model for creating/updating items (excludes ID)
 
 The application uses OpenAPI 3.1 specification and includes comprehensive API documentation accessible through the built-in Swagger UI.
+
+## API Design Enforcement
+
+### Spectral Configuration
+- `.spectral.yml`: Defines API design rules and style guidelines
+- Extends `@stoplight/spectral-oai:recommended` for OpenAPI best practices
+- Custom rules for naming conventions, HTTP status codes, and documentation requirements
+- Enforces RESTful design patterns and consistent API structure
+
+### GitHub Actions CI/CD
+- Automated linting with ruff and black
+- API design validation with Spectral
+- Pytest test execution
+- Build validation and endpoint testing
+- Runs on push to main/develop branches and pull requests
