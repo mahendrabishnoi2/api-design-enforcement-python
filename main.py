@@ -158,5 +158,31 @@ async def get_items_by_category(category_id: int):
     return [item for item in items_db if item.get("category_id") == category_id]
 
 
+# BAD API DESIGN EXAMPLES - These will trigger Spectral errors/warnings
+
+@app.get("/api/v1/get-all-items")  # Violates: HTTP verbs in path, not kebab-case
+async def get_all_items_bad():
+    """This endpoint violates multiple API design rules."""
+    return items_db
+
+
+@app.post("/createNewCategory")  # Violates: HTTP verbs in path, camelCase
+async def create_new_category_bad():
+    """Another bad endpoint design."""
+    return {"message": "This is poorly designed"}
+
+
+@app.get("/items/search_by_name")  # Violates: snake_case instead of kebab-case
+async def search_items_by_name_bad():
+    """Search items - but with bad URL design."""
+    return []
+
+
+@app.delete("/admin/deleteEverything")  # Violates: camelCase, HTTP verb in path
+async def admin_delete_everything():
+    """Dangerous endpoint with poor naming."""
+    return {"message": "Everything deleted"}
+
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
